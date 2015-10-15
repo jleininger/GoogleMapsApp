@@ -1,0 +1,15 @@
+{
+  "name": "Google Maps App",
+  "description": "Some project that uses Google Maps",
+  "version": "0.1",
+  "manifest_version": 2,
+  "app": {
+    "background": {
+      "scripts": ["Assets/Scripts/background.js"]
+    }
+  },
+  "permissions": [
+    "storage",
+    "https://maps.googleapis.com/*"
+  ]
+}
