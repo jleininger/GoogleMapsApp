@@ -1,0 +1,16 @@
+{
+  "name": "Dispaly a Google Maps API map within a Chrome extension",
+  "version": "1.0",
+  "permissions": [
+    
+  ],
+  "app" : {
+	"background" : {
+		"scripts" : ["background.js"]
+	}
+  },
+  "sandbox": {
+      "pages": [ "sandbox.html" ]
+  },
+  "manifest_version": 2
+}
