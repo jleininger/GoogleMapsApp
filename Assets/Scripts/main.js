@@ -1,5 +1,4 @@
 var Map = React.createClass({
-    displayName: 'Map',
     getInitialState: function() {
         return {
             mapOptions: {
@@ -35,7 +34,7 @@ var Map = React.createClass({
         this.state.service = new google.maps.DirectionsService();
         this.state.poly = new google.maps.Polyline({map: this.state.map, strokeColor: "#0000FF"});
         google.maps.event.addListener(this.state.map, 'click', this.addPoint);
-        google.maps.event.addListener(this.state.map, 'rightclick', this.removePoint);
+        google.maps.event.addListener(this.state.map, 'rightclick', this.testDistance);
 
         this.setState({
             mapOptions: mapOptions,
@@ -79,7 +78,23 @@ var Map = React.createClass({
             });
         }
     },
-    removePoint: function() {
+    testDistance: function() {
+        var path = this.state.path;
+        console.log('Last point: ', path.getAt(path.getLength() - 1));
+        this.getTotalDistanceFromRoute(path.getAt(path.getLength() - 2), path.getAt(path.getLength() - 1))
+    },
+    getTotalDistanceFromRoute: function(startPoint, endPoint) {
+        this.state.service.route({
+            origin: startPoint,
+            destination: endPoint,
+            travelMode: google.maps.DirectionsTravelMode.DRIVING
+        }, function(result, status) {
+            if(status == google.maps.DirectionsStatus.OK) {
+                console.log('Total Distance', result.routes[0].legs[0].distance.value);
+            }
+        });
+    },
+    getTotalTimeFromRoute: function() {
 
     },
     render: function() {
