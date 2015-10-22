@@ -80,8 +80,7 @@ var Map = React.createClass({
     },
     testDistance: function() {
         var path = this.state.path;
-        console.log('Last point: ', path.getAt(path.getLength() - 1));
-        this.getTotalDistanceFromRoute(path.getAt(path.getLength() - 2), path.getAt(path.getLength() - 1))
+        this.getTotalDistanceFromRoute(path.getAt(path.getLength() - 2), path.getAt(path.getLength() - 1));
     },
     getTotalDistanceFromRoute: function(startPoint, endPoint) {
         this.state.service.route({
@@ -104,13 +103,59 @@ var Map = React.createClass({
     }
 });
 
+var CountDownTimer = React.createClass({
+    getInitialState: function() {
+        return {
+            timeDisplay: '00:00',
+            timerRunning: false
+        };
+    },
+    start: function(duration) {
+        var self = this,
+            startTime = Date.now(),
+            deltaTime,
+            minutes,
+            seconds,
+            display;
+
+        function countdown() {
+            deltaTime = duration - (((Date.now() - startTime) / 1000) | 0);
+            minutes = (deltaTime / 60) | 0;
+            seconds = (deltaTime % 60) | 0;
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display = minutes + ":" + seconds;
+
+            if(deltaTime <= 0) {
+                startTime = Date.now() + 1000;
+            }
+
+            self.setState({timeDisplay: display});
+        }
+
+        countdown();
+        setInterval(countdown, 1000);
+        this.state.timerRunning = true;
+    },
+    render: function() {
+        return (
+            <div>
+                <h2 className='countdown'>{this.state.timeDisplay}</h2>
+                <button onClick={this.start.bind(null, 60 * 5)} disabled={this.state.timerRunning}>Start Timer</button>
+            </div>
+        )
+    }
+});
+
 var GameControls = React.createClass({
     render: function() {
         return (
             <div id='gameControls' className='game-controls'>
                 <h1>Fastest Route</h1>
                 <h3>Time Left:</h3>
-                <h2>00:00</h2>
+                <CountDownTimer />
             </div>
         )
     }
