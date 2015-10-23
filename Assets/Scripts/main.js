@@ -6,8 +6,12 @@ var Map = React.createClass({
                 center: null,
                 mapTypeId: null,
                 mapTypeControlOptions: null,
-                disableDoubleClickZoom: true,
-                scrollwheel: true,
+                navigationControl: false,
+                scaleControl: false,
+                zoomControl: false,
+                draggable: false,
+                disableDoubleClickZoom: false,
+                scrollwheel: false,
                 draggableCursor: 'crosshair'
             },
             map: null,
@@ -110,21 +114,27 @@ var CountDownTimer = React.createClass({
             timerRunning: false
         };
     },
-    start: function(duration) {
+    start: function(duration, gameOverEvent) {
         var self = this,
             startTime = Date.now(),
             deltaTime,
             minutes,
             seconds,
-            display;
+            display,
+            timerInterval;
 
         function countdown() {
             deltaTime = duration - (((Date.now() - startTime) / 1000) | 0);
             minutes = (deltaTime / 60) | 0;
             seconds = (deltaTime % 60) | 0;
 
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
+            if(minutes === 0 && seconds === 0) {
+                //gameOverEvent();
+                clearInterval(timerInterval);
+            }
+
+            minutes = (minutes < 10) ? "0" + minutes : minutes;
+            seconds = (seconds < 10) ? "0" + seconds : seconds;
 
             display = minutes + ":" + seconds;
 
@@ -136,14 +146,14 @@ var CountDownTimer = React.createClass({
         }
 
         countdown();
-        setInterval(countdown, 1000);
+        timerInterval = setInterval(countdown, 1000);
         this.state.timerRunning = true;
     },
     render: function() {
         return (
             <div>
                 <h2 className='countdown'>{this.state.timeDisplay}</h2>
-                <button onClick={this.start.bind(null, 60 * 5)} disabled={this.state.timerRunning}>Start Timer</button>
+                <button onClick={this.start.bind(null, 10)} disabled={this.state.timerRunning}>Start Timer</button>
             </div>
         )
     }
