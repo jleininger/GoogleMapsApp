@@ -151,7 +151,42 @@ var Locations = React.createClass({
         };
     },
     getPoint: function() {
-
+		var geocoder = new google.maps.Geocoder;
+		var pointOne = pointsList[Math.floor(Math.random() * 3)];
+		//console.log(pointOne.x);
+		var pointTwo = pointsList[Math.floor(Math.random() * 3)];
+		//console.log(pointTwo.x);
+		// pick two points from array
+		var startLatLng = {lat: parseFloat(pointOne.x), lng: parseFloat(pointOne.y)};
+		var startLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
+		if(status === google.maps.GeocoderStatus.OK) {
+			if(results[0]) {			
+				console.log(results[0].formatted_address);
+				this.setState({
+					startPoint:results[0].formatted_address);
+				})
+			} else {
+				console.log('results 0 not there');
+			}	
+		} else {
+			console.log('uh oh: ' + status);
+		}
+		var endLatLng = {lat: parseFloat(pointTwo.x), lng: parseFloat(pointTwo.y)};
+		var endLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
+		if(status === google.maps.GeocoderStatus.OK) {
+			if(results[0]) {			
+				console.log(results[0].formatted_address);
+				this.setState({
+					endPoint:results[0].formatted_address);
+				})
+			} else {
+				console.log('results 0 not there');
+			}	
+		} else {
+			console.log('uh oh: ' + status);
+		}
+	
+	});
     },
     render: function() {
         return (
