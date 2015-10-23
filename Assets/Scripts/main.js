@@ -8,24 +8,28 @@ var Map = React.createClass({
                 mapTypeControlOptions: null,
                 navigationControl: false,
                 scaleControl: false,
-                zoomControl: false,
-                draggable: false,
-                disableDoubleClickZoom: false,
-                scrollwheel: false,
+                zoomControl: true,
+                draggable: true,
+                disableDoubleClickZoom: true,
+                scrollwheel: true,
                 draggableCursor: 'crosshair'
             },
             map: null,
             path: null,
             poly: null,
-            service: null
+            directionsService: null,
+            placesService: null
         };
     },
     componentWillMount: function() {
         this.loadScript();
     },
     initialize: function() {
+        var self, mapOptions, map, path, directionsService, placesService, poly;
+
+        self = this;
         //Set up map options now that we have reference to google maps
-        var mapOptions = this.state.mapOptions;
+        mapOptions = this.state.mapOptions;
         mapOptions.center = new google.maps.LatLng(40.766088, -111.890743);
         mapOptions.mapTypeId = google.maps.MapTypeId.HYBRID;
         mapOptions.mapTypeControlOptions = {
@@ -33,19 +37,23 @@ var Map = React.createClass({
                 google.maps.MapTypeId.SATELLITE]
         };
 
-        this.state.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-        this.state.path = new google.maps.MVCArray();
-        this.state.service = new google.maps.DirectionsService();
-        this.state.poly = new google.maps.Polyline({map: this.state.map, strokeColor: "#0000FF"});
-        google.maps.event.addListener(this.state.map, 'click', this.addPoint);
-        google.maps.event.addListener(this.state.map, 'rightclick', this.testDistance);
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+        path = new google.maps.MVCArray();
+        directionsService = new google.maps.DirectionsService();
+        placesService = new google.maps.places.PlacesService(map);
+        poly = new google.maps.Polyline({map: this.state.map, strokeColor: "#0000FF"});
+        google.maps.event.addListener(map, 'click', this.addPoint);
+        google.maps.event.addListener(map, 'rightclick', function() {
+            self.findNearbyDestination(self.state.mapOptions.center);
+        });
 
         this.setState({
             mapOptions: mapOptions,
-            map: this.state.map,
-            path: this.state.path,
-            service: this.state.service,
-            poly: this.state.poly
+            map: map,
+            path: path,
+            directionsService: directionsService,
+            placesService: placesService,
+            poly: poly
         });
     },
     loadScript: function() {
@@ -56,19 +64,19 @@ var Map = React.createClass({
 
         var script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true&callback=initializeMap&libraries=places';
+        script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=true&callback=initializeMap';
         document.body.appendChild(script);
     },
     addPoint: function(evt) {
         var path = this.state.path,
             poly = this.state.poly,
-            service = this.state.service;
+            directionsService = this.state.directionsService;
 
         if(path.getLength() === 0) {
             path.push(evt.latLng);
             poly.setPath(path);
         } else {
-            service.route({
+            directionsService.route({
                 origin: path.getAt(path.getLength() - 1),
                 destination: evt.latLng,
                 travelMode: google.maps.DirectionsTravelMode.DRIVING
@@ -76,6 +84,7 @@ var Map = React.createClass({
                 if(status == google.maps.DirectionsStatus.OK) {
                     var routesLength = result.routes[0].overview_path.length;
                     for(var i = 0; i < routesLength; i++) {
+                        console.log(result.routes[0]);
                         path.push(result.routes[0].overview_path[i]);
                     }
                 }
@@ -87,7 +96,7 @@ var Map = React.createClass({
         this.getTotalDistanceFromRoute(path.getAt(path.getLength() - 2), path.getAt(path.getLength() - 1));
     },
     getTotalDistanceFromRoute: function(startPoint, endPoint) {
-        this.state.service.route({
+        this.state.directionsService.route({
             origin: startPoint,
             destination: endPoint,
             travelMode: google.maps.DirectionsTravelMode.DRIVING
@@ -99,6 +108,32 @@ var Map = React.createClass({
     },
     getTotalTimeFromRoute: function() {
 
+    },
+    findNearbyDestination: function(startLoc) {
+        var self = this,
+            request = {
+            location: startLoc,
+                radius: 10000,
+            types: ['store']
+            },
+            placesService = this.state.placesService;
+
+        placesService.nearbySearch(request, function(results, status) {
+            if(status == google.maps.places.PlacesServiceStatus.OK) {
+                for(var i = 0; i < results.length; i++) {
+                    var place = results[i];
+                    self.createMarker(place);
+                }
+            }
+        });
+    },
+    createMarker: function(place) {
+        new google.maps.Marker({
+            position: place.geometry.location,
+            map: this.state.map,
+            title: place.name,
+            animation: google.maps.Animation.DROP
+        });
     },
     render: function() {
        return (
