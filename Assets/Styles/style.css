@@ -14,6 +14,10 @@ html, body, #map-canvas, #container, #game {
     width: 80%
 }
 
+.locations {
+    margin-top: 50px;
+}
+
 .game-controls {
     display: inline-block;
     height: 100%;

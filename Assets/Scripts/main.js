@@ -56,7 +56,7 @@ var Map = React.createClass({
 
         var script = document.createElement('script');
         script.type = 'text/javascript';
-        script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true&callback=initializeMap';
+        script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true&callback=initializeMap&libraries=places';
         document.body.appendChild(script);
     },
     addPoint: function(evt) {
@@ -104,6 +104,29 @@ var Map = React.createClass({
        return (
            <div id='map-canvas'></div>
        );
+    }
+});
+
+var Locations = React.createClass({
+    getInitialState: function() {
+        return {
+            allPoints: [],
+            startPoint: null,
+            endPoint: null
+        };
+    },
+    getPoint: function() {
+
+    },
+    render: function() {
+        return (
+            <div className="locations">
+                <h3>Start Point:</h3>
+                <h4>{this.state.startPoint}</h4>
+                <h3>End Point:</h3>
+                <h4>{this.state.endPoint}</h4>
+            </div>
+        )
     }
 });
 
@@ -166,6 +189,7 @@ var GameControls = React.createClass({
                 <h1>Fastest Route</h1>
                 <h3>Time Left:</h3>
                 <CountDownTimer />
+                <Locations />
             </div>
         )
     }
