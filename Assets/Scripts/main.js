@@ -41,7 +41,7 @@ var Map = React.createClass({
         path = new google.maps.MVCArray();
         directionsService = new google.maps.DirectionsService();
         placesService = new google.maps.places.PlacesService(map);
-        poly = new google.maps.Polyline({map: this.state.map, strokeColor: "#0000FF"});
+        poly = new google.maps.Polyline({map: map, strokeColor: "#0000FF"});
         google.maps.event.addListener(map, 'click', this.addPoint);
         google.maps.event.addListener(map, 'rightclick', function() {
             self.findNearbyDestination(self.state.mapOptions.center);
@@ -84,7 +84,6 @@ var Map = React.createClass({
                 if(status == google.maps.DirectionsStatus.OK) {
                     var routesLength = result.routes[0].overview_path.length;
                     for(var i = 0; i < routesLength; i++) {
-                        console.log(result.routes[0]);
                         path.push(result.routes[0].overview_path[i]);
                     }
                 }
@@ -151,42 +150,42 @@ var Locations = React.createClass({
         };
     },
     getPoint: function() {
-		var geocoder = new google.maps.Geocoder;
-		var pointOne = pointsList[Math.floor(Math.random() * 3)];
-		//console.log(pointOne.x);
-		var pointTwo = pointsList[Math.floor(Math.random() * 3)];
-		//console.log(pointTwo.x);
-		// pick two points from array
-		var startLatLng = {lat: parseFloat(pointOne.x), lng: parseFloat(pointOne.y)};
-		var startLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
-		if(status === google.maps.GeocoderStatus.OK) {
-			if(results[0]) {			
-				console.log(results[0].formatted_address);
-				this.setState({
-					startPoint:results[0].formatted_address);
-				})
-			} else {
-				console.log('results 0 not there');
-			}	
-		} else {
-			console.log('uh oh: ' + status);
-		}
-		var endLatLng = {lat: parseFloat(pointTwo.x), lng: parseFloat(pointTwo.y)};
-		var endLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
-		if(status === google.maps.GeocoderStatus.OK) {
-			if(results[0]) {			
-				console.log(results[0].formatted_address);
-				this.setState({
-					endPoint:results[0].formatted_address);
-				})
-			} else {
-				console.log('results 0 not there');
-			}	
-		} else {
-			console.log('uh oh: ' + status);
-		}
-	
-	});
+	//	var geocoder = new google.maps.Geocoder;
+	//	var pointOne = pointsList[Math.floor(Math.random() * 3)];
+	//	//console.log(pointOne.x);
+	//	var pointTwo = pointsList[Math.floor(Math.random() * 3)];
+	//	//console.log(pointTwo.x);
+	//	// pick two points from array
+	//	var startLatLng = {lat: parseFloat(pointOne.x), lng: parseFloat(pointOne.y)};
+	//	var startLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
+	//	if(status === google.maps.GeocoderStatus.OK) {
+	//		if(results[0]) {
+	//			console.log(results[0].formatted_address);
+	//			this.setState({
+	//				startPoint:results[0].formatted_address);
+	//			})
+	//		} else {
+	//			console.log('results 0 not there');
+	//		}
+	//	} else {
+	//		console.log('uh oh: ' + status);
+	//	}
+	//	var endLatLng = {lat: parseFloat(pointTwo.x), lng: parseFloat(pointTwo.y)};
+	//	var endLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
+	//	if(status === google.maps.GeocoderStatus.OK) {
+	//		if(results[0]) {
+	//			console.log(results[0].formatted_address);
+	//			this.setState({
+	//				endPoint:results[0].formatted_address);
+	//			})
+	//		} else {
+	//			console.log('results 0 not there');
+	//		}
+	//	} else {
+	//		console.log('uh oh: ' + status);
+	//	}
+	//
+	//});
     },
     render: function() {
         return (
