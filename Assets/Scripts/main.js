@@ -18,7 +18,8 @@ var Map = React.createClass({
             path: null,
             poly: null,
             directionsService: null,
-            placesService: null
+            placesService: null,
+            destination: null
         };
     },
     componentWillMount: function() {
@@ -39,12 +40,15 @@ var Map = React.createClass({
 
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         path = new google.maps.MVCArray();
+        path.push(mapOptions.center);
         directionsService = new google.maps.DirectionsService();
         placesService = new google.maps.places.PlacesService(map);
         poly = new google.maps.Polyline({map: map, strokeColor: "#0000FF"});
-        google.maps.event.addListener(map, 'click', this.addPoint);
-        google.maps.event.addListener(map, 'rightclick', function() {
-            self.findNearbyDestination(self.state.mapOptions.center);
+        poly.setPath(path);
+        google.maps.event.addListener(map, 'click', function(evt) {
+            self.addPoint(evt, function(nextStop) {
+                self.state.map.setCenter(nextStop);
+            });
         });
 
         this.setState({
@@ -54,6 +58,12 @@ var Map = React.createClass({
             directionsService: directionsService,
             placesService: placesService,
             poly: poly
+        });
+
+        this.createMarker({name: 'Your current location', geometry: { location: mapOptions.center}});
+        this.findNearbyDestination(self.state.mapOptions.center, function(des) {
+            self.createMarker(des);
+            self.setState({destination: des});
         });
     },
     loadScript: function() {
@@ -67,28 +77,37 @@ var Map = React.createClass({
         script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=true&callback=initializeMap';
         document.body.appendChild(script);
     },
-    addPoint: function(evt) {
+    setMapToUsersCurrentLocaion: function(map) {
+        //This does not work in a chrome app
+        if(navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var position = new google.maps.LatLng(
+                    position.coords.latitude,
+                    position.coords.longitude
+                );
+
+                map.setCenter(position);
+            });
+        }
+    },
+    addPoint: function(evt, next) {
         var path = this.state.path,
             poly = this.state.poly,
             directionsService = this.state.directionsService;
 
-        if(path.getLength() === 0) {
-            path.push(evt.latLng);
-            poly.setPath(path);
-        } else {
-            directionsService.route({
-                origin: path.getAt(path.getLength() - 1),
-                destination: evt.latLng,
-                travelMode: google.maps.DirectionsTravelMode.DRIVING
-            }, function(result, status) {
-                if(status == google.maps.DirectionsStatus.OK) {
-                    var routesLength = result.routes[0].overview_path.length;
-                    for(var i = 0; i < routesLength; i++) {
-                        path.push(result.routes[0].overview_path[i]);
-                    }
+        directionsService.route({
+            origin: path.getAt(path.getLength() - 1),
+            destination: evt.latLng,
+            travelMode: google.maps.DirectionsTravelMode.DRIVING
+        }, function(result, status) {
+            if(status == google.maps.DirectionsStatus.OK) {
+                var routesLength = result.routes[0].overview_path.length;
+                for(var i = 0; i < routesLength; i++) {
+                    path.push(result.routes[0].overview_path[i]);
+                    next(result.routes[0].overview_path[i]);
                 }
-            });
-        }
+            }
+        });
     },
     testDistance: function() {
         var path = this.state.path;
@@ -108,21 +127,17 @@ var Map = React.createClass({
     getTotalTimeFromRoute: function() {
 
     },
-    findNearbyDestination: function(startLoc) {
-        var self = this,
-            request = {
-            location: startLoc,
+    findNearbyDestination: function(startLoc, callback) {
+        var request = {
+                location: startLoc,
                 radius: 10000,
-            types: ['store']
+                types: ['store']
             },
             placesService = this.state.placesService;
 
         placesService.nearbySearch(request, function(results, status) {
             if(status == google.maps.places.PlacesServiceStatus.OK) {
-                for(var i = 0; i < results.length; i++) {
-                    var place = results[i];
-                    self.createMarker(place);
-                }
+                callback(results[Math.floor(Math.random() * results.length)]);
             }
         });
     },
