@@ -8,10 +8,10 @@ var Map = React.createClass({
                 mapTypeControlOptions: null,
                 navigationControl: false,
                 scaleControl: false,
-                zoomControl: true,
-                draggable: true,
+                zoomControl: false,
+                draggable: false,
                 disableDoubleClickZoom: true,
-                scrollwheel: true,
+                scrollwheel: false,
                 draggableCursor: 'crosshair'
             },
             map: null,
@@ -150,119 +150,103 @@ var Map = React.createClass({
         });
     },
     render: function() {
-       return (
-           <div id='map-canvas'></div>
-       );
-    }
-});
+        var destination = this.state.destination || 'Getting Destination',
+            destinationName = 'Getting Destination',
+            destinationAddress = 'Getting Destination';
 
-var Locations = React.createClass({
-    getInitialState: function() {
-        return {
-            allPoints: [],
-            startPoint: null,
-            endPoint: null
-        };
-    },
-    getPoint: function() {
-	//	var geocoder = new google.maps.Geocoder;
-	//	var pointOne = pointsList[Math.floor(Math.random() * 3)];
-	//	//console.log(pointOne.x);
-	//	var pointTwo = pointsList[Math.floor(Math.random() * 3)];
-	//	//console.log(pointTwo.x);
-	//	// pick two points from array
-	//	var startLatLng = {lat: parseFloat(pointOne.x), lng: parseFloat(pointOne.y)};
-	//	var startLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
-	//	if(status === google.maps.GeocoderStatus.OK) {
-	//		if(results[0]) {
-	//			console.log(results[0].formatted_address);
-	//			this.setState({
-	//				startPoint:results[0].formatted_address);
-	//			})
-	//		} else {
-	//			console.log('results 0 not there');
-	//		}
-	//	} else {
-	//		console.log('uh oh: ' + status);
-	//	}
-	//	var endLatLng = {lat: parseFloat(pointTwo.x), lng: parseFloat(pointTwo.y)};
-	//	var endLocation = geocoder.geocode({'location': startLatLng},function(results, status) {
-	//	if(status === google.maps.GeocoderStatus.OK) {
-	//		if(results[0]) {
-	//			console.log(results[0].formatted_address);
-	//			this.setState({
-	//				endPoint:results[0].formatted_address);
-	//			})
-	//		} else {
-	//			console.log('results 0 not there');
-	//		}
-	//	} else {
-	//		console.log('uh oh: ' + status);
-	//	}
-	//
-	//});
-    },
-    render: function() {
-        return (
-            <div className="locations">
-                <h3>Start Point:</h3>
-                <h4>{this.state.startPoint}</h4>
-                <h3>End Point:</h3>
-                <h4>{this.state.endPoint}</h4>
-            </div>
-        )
+        if(destination != 'Getting Destination') {
+            destinationName = destination.name;
+            destinationAddress = destination.vicinity;
+        }
+
+       return (
+           <div id='game'>
+               <GameStart destinationName={destinationName} destinationAddress={destinationAddress} />
+               <div id='map-canvas'></div>
+               <GameControls />
+           </div>
+       );
     }
 });
 
 var CountDownTimer = React.createClass({
     getInitialState: function() {
         return {
-            timeDisplay: '00:00',
-            timerRunning: false
+            timeDisplay: '00:00'
         };
     },
-    start: function(duration, gameOverEvent) {
-        var self = this,
-            startTime = Date.now(),
-            deltaTime,
-            minutes,
-            seconds,
-            display,
-            timerInterval;
+    statics: {
+        startCountdown: function(duration, gameOverEvent) {
+            var startTime = Date.now(),
+                deltaTime,
+                minutes,
+                seconds,
+                display,
+                timerInterval;
 
-        function countdown() {
-            deltaTime = duration - (((Date.now() - startTime) / 1000) | 0);
-            minutes = (deltaTime / 60) | 0;
-            seconds = (deltaTime % 60) | 0;
+            function countdown() {
+                deltaTime = duration - (((Date.now() - startTime) / 1000) | 0);
+                minutes = (deltaTime / 60) | 0;
+                seconds = (deltaTime % 60) | 0;
 
-            if(minutes === 0 && seconds === 0) {
-                //gameOverEvent();
-                clearInterval(timerInterval);
+                if (minutes === 0 && seconds === 0) {
+                    gameOverEvent();
+                    clearInterval(timerInterval);
+                }
+
+                minutes = (minutes < 10) ? "0" + minutes : minutes;
+                seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+                display = minutes + ":" + seconds;
+
+                if (deltaTime <= 0) {
+                    startTime = Date.now() + 1000;
+                }
+
+                document.getElementById('countdown').innerHTML = display;
             }
 
-            minutes = (minutes < 10) ? "0" + minutes : minutes;
-            seconds = (seconds < 10) ? "0" + seconds : seconds;
-
-            display = minutes + ":" + seconds;
-
-            if(deltaTime <= 0) {
-                startTime = Date.now() + 1000;
-            }
-
-            self.setState({timeDisplay: display});
+            countdown();
+            timerInterval = setInterval(countdown, 1000);
         }
-
-        countdown();
-        timerInterval = setInterval(countdown, 1000);
-        this.state.timerRunning = true;
     },
     render: function() {
         return (
             <div>
-                <h2 className='countdown'>{this.state.timeDisplay}</h2>
-                <button onClick={this.start.bind(null, 10)} disabled={this.state.timerRunning}>Start Timer</button>
+                <h2 id='countdown' className='countdown'>{this.state.timeDisplay}</h2>
             </div>
         )
+    }
+});
+
+var GameStart = React.createClass({
+    getInitialState: function() {
+        return {
+            visible: true
+        }
+    },
+    hide: function() {
+        this.setState({visible: false});
+        CountDownTimer.startCountdown(30, function() {
+            console.log('This is a mess');
+        });
+    },
+    render: function() {
+        return (
+            <div className={(this.state.visible) ? 'visible' : 'hidden'}>
+                <div id='game-start-message' className='game-start-message'>
+                    <h1>Welcome to Fastest Route!</h1>
+                    <p>You are an Uber driver and you need to get your passengers to their destination
+                        as quickly and as efficiently as possible.</p>
+                    <h2>Destination:</h2>
+                    <h4>{this.props.destinationName}</h4>
+                    <h2>at:</h2>
+                    <h4>{this.props.destinationAddress}</h4>
+                    <button onClick={this.hide}>Start</button>
+                </div>
+                <div className='black-overlay'></div>
+            </div>
+        );
     }
 });
 
@@ -272,22 +256,10 @@ var GameControls = React.createClass({
             <div id='gameControls' className='game-controls'>
                 <h1>Fastest Route</h1>
                 <h3>Time Left:</h3>
-                <CountDownTimer />
-                <Locations />
+                <CountDownTimer countdownTime={this.props.countdownTime} />
             </div>
         )
     }
 });
 
-var Main = React.createClass({
-    render: function() {
-        return (
-            <div id='game'>
-                <Map />
-                <GameControls />
-            </div>
-        )
-    }
-});
-
-ReactDOM.render(<Main />, document.getElementById('container'));
+ReactDOM.render(<Map />, document.getElementById('container'));
